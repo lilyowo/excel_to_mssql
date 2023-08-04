@@ -1,0 +1,14 @@
+1         	Hamster	1         
+1023      	mini hamster	3         
+2         	Cat	1         
+20        	papaya	3         
+23        	tomato	2         
+29        	apple	1         
+3         	Dog	2         
+35        	orange	2         
+4         	chiwawa	3         
+47        	banana	3         
+5         	bird	2         
+6         	capibara	1         
+68        	grape	2         
+9         	guava	1         
