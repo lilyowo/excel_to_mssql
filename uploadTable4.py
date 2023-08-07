@@ -69,13 +69,13 @@ for _, row in excel_sheet.iterrows():
     else:
         existing_rows.add((Med_id, Source_id, Sample_id))
 
-# check if primary key exists in SQL table C
+# check if primary key exists in SQL table 
 existing_ids = []
 with engine.connect() as conn:
     result = conn.execute(f'SELECT Med_id, Source_id, Sample_id FROM {TABLE_NAME}')
     existing_ids = [tuple(row) for row in result.fetchall()]
 duplicate_ids = [(row['Med_id'],row['Source_id'],row['Sample_id'],'mssql_duplicate') for _, row in excel_sheet.iterrows() if tuple(row[['Med_id', 'Source_id', 'Sample_id']]) in existing_ids]
-# Remove invalid and duplicate rows from excel_sheet
+# Print invalid and duplicate rows from excel_sheet
 if invalid_rows or duplicate_ids:
     print("Invalid or duplicate data found in Excel:")
     if invalid_rows:
@@ -84,8 +84,7 @@ if invalid_rows or duplicate_ids:
     if duplicate_ids:
         print("Duplicate data rows:")
         print(duplicate_ids)
-#     excel_sheet = excel_sheet[~excel_sheet.apply(tuple, axis=1).isin([tuple(row) for _, row in invalid_rows + duplicate_ids])]
-
+# Remove them from excel_sheet
 invalid_rows_set = set(tuple(row[:-1]) for row in invalid_rows)
 duplicate_set = set(tuple(row[:-1]) for row in duplicate_ids)
 valid_rows = [row for _, row in excel_sheet.iterrows() if tuple(row[['Med_id', 'Source_id', 'Sample_id']]) not in invalid_rows_set and tuple(row[['Med_id', 'Source_id', 'Sample_id']]) not in duplicate_set]
