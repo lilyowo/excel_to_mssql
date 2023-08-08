@@ -7,7 +7,7 @@ import re
 
 SERVER_NAME = 'LAPTOP-B6OG51F6'
 DATABASE_NAME = 'med_DB2'
-TABLE_NAME = 'StandarData'
+TABLE_NAME = 'StandardData'
 excel_file = './Med_table.xlsx'
 connection_string = f"""
     DRIVER={{SQL Server}};
@@ -22,7 +22,7 @@ inspector = inspect(engine)
 table_columns = inspector.get_columns(TABLE_NAME)
 
 # for single sheet
-excel_sheet = pd.read_excel(excel_file, sheet_name="StandarData")
+excel_sheet = pd.read_excel(excel_file, sheet_name="StandardData")
 
 # preprocess the excel file
 
@@ -108,8 +108,9 @@ def remove_special_chars(cell_value):
 # each cell max length 300
 for column in excel_sheet.columns:
     if excel_sheet[column].dtype == "object":
-        excel_sheet[column] = excel_sheet[column].apply(lambda x: truncate_data(x, 300))
         excel_sheet[column] = excel_sheet[column].apply(lambda x: remove_special_chars(str(x)))
+        if(column!="SS_ratio"):
+            excel_sheet[column] = excel_sheet[column].apply(lambda x: truncate_data(x, 500))
 
 
 

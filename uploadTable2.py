@@ -105,12 +105,13 @@ def remove_special_chars(cell_value):
     special_chars_pattern = r'[!@#$%^&*_+=\\/:;,<>?"\'`~\[\]{}|]'
     return re.sub(special_chars_pattern, '', cell_value)
 
-# each cell max length 300
+# each cell max length 500
 for column in excel_sheet.columns:
     if excel_sheet[column].dtype == "object":
-        excel_sheet[column] = excel_sheet[column].apply(lambda x: truncate_data(x, 300))
+        excel_sheet[column] = excel_sheet[column].apply(lambda x: remove_special_chars(str(x)))
         if(column!="Source_link"):
-            excel_sheet[column] = excel_sheet[column].apply(lambda x: remove_special_chars(str(x)))
+            excel_sheet[column] = excel_sheet[column].apply(lambda x: truncate_data(x, 500))
+            
 
 
 

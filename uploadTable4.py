@@ -3,6 +3,7 @@ from sqlalchemy.engine import URL
 import pypyodbc # pip install pypyodbc
 import pandas as pd # pip install pandas
 import re
+import math
 
 
 SERVER_NAME = 'LAPTOP-B6OG51F6'
@@ -28,6 +29,17 @@ table_columns = inspector.get_columns(TABLE_NAME)
 excel_sheet = pd.read_excel(excel_file, sheet_name="SampleData")
 
 # preprocess the excel file
+
+#處理數值欄位必為數值 否則改Null
+# check which is numerate
+numeric_columns = [column['name'] for column in table_columns if column['type'].python_type in (int, float)]
+# non numerate data turn into Null
+for col in numeric_columns:
+    excel_sheet[col] = pd.to_numeric(excel_sheet[col], errors='coerce')
+
+
+
+
 #處理foreign key連接問題
 # check foreign key 
 def check_foreign_key(ref_tb, attribute):
@@ -38,16 +50,20 @@ def check_foreign_key(ref_tb, attribute):
     existing_ids = set(ref_table[attribute.lower()])#讀取sql出來的attribute不會區分大小寫一律都小寫出來
     # find excel id not in ref table
     missing_ids = excel_sheet[~excel_sheet[attribute].isin(existing_ids)][attribute].tolist()
+    
     # remove rows  which id not in ref table
     if len(missing_ids) > 0:
         print(f"以下 id 在 ref table中不存在: {missing_ids}")
-        excel_sheet = excel_sheet[excel_sheet[attribute].isin(existing_ids)]
+        excel_sheet = excel_sheet[excel_sheet[attribute].isin(existing_ids) | pd.isna(excel_sheet[attribute])]
+
 
 check_foreign_key(REF_TB_NAME1, "Med_id")
 check_foreign_key(REF_TB_NAME2, "Source_id")
 check_foreign_key(REF_TB_NAME5, "Standard_id")
 
-
+if excel_sheet.empty:
+    print("empty excel")
+    exit()  # 結束程式
 
 #處理primary key獨立問題
 # primary key uniqueness and is number
@@ -91,13 +107,10 @@ valid_rows = [row for _, row in excel_sheet.iterrows() if tuple(row[['Med_id', '
 excel_sheet = pd.DataFrame(valid_rows)
 
 
-#處理數值欄位必為數值 否則改Null
-# check which is numerate
-numeric_columns = [column['name'] for column in table_columns if column['type'].python_type in (int, float)]
+if excel_sheet.empty:
+    print("empty excel")
+    exit()  # 結束程式
 
-# non numerate data turn into Null
-for col in numeric_columns:
-    excel_sheet[col] = pd.to_numeric(excel_sheet[col], errors='coerce')
 
 
 # 處理not null的值有Null就不可以放進去
@@ -140,10 +153,10 @@ def remove_special_chars(cell_value):
 # each cell max length 300
 for column in excel_sheet.columns:
     if excel_sheet[column].dtype == "object":
-        excel_sheet[column] = excel_sheet[column].apply(lambda x: truncate_data(x, 300))
         excel_sheet[column] = excel_sheet[column].apply(lambda x: remove_special_chars(str(x)))
+        if(column!="SS_ratio"):
+            excel_sheet[column] = excel_sheet[column].apply(lambda x: truncate_data(x, 500))
 
-print(excel_sheet)
 
 # write data to sql
 excel_sheet.to_sql(TABLE_NAME, engine, if_exists='append', index=False)
