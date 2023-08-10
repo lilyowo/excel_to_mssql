@@ -130,8 +130,8 @@ if not invalid_rows.empty:
 # function for newline replace by space
 def replace_newlines_and_spaces(cell_data):
     if isinstance(cell_data, str):
-        #return cell_data.replace("\n", "").replace(" ", "")
-        return cell_data.replace("\n", "")
+        return cell_data.replace("\n", "").replace(" ", "")#避免Methanol (甲醇)跟Methanol(甲醇)不一樣
+        #return cell_data.replace("\n", "")
     return cell_data
 
 # use applymap to apply function for each cell
