@@ -36,5 +36,6 @@ CREATE TABLE SampleData(
 
 	SS_ch_detect_wavelength float,
 	SS_ch_flow_rate float,
-	SS_ch_Injection float
+	SS_ch_Injection float,
+	SS_base nvarchar(500)
 );
