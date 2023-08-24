@@ -25,17 +25,18 @@ table_columns = inspector.get_columns(TABLE_NAME)
 excel_sheet = pd.read_excel(excel_file, sheet_name="MedSource")
 
 # preprocess the excel file
-
+print("Processing MedSource Table...")
 #處理primary key獨立問題
 # primary key independence 
 invalid_ids = []# collect not number data row
 for _, row in excel_sheet.iterrows():
     try:
         id_value = int(row['Source_id'])
+        row['Source_id'] = id_value
     except ValueError:
         invalid_ids.append(row['Source_id'])
 
-    row['Source_id'] = id_value
+    
 
 # check duplicate ID
 
@@ -63,12 +64,11 @@ if invalid_ids or duplicate_ids:
 # check which is numerate
 numeric_columns = [column['name'] for column in table_columns if column['type'].python_type in (int, float)]
 
-# non numerate data turn into Null
+# non numerate data turn into Nan
 for col in numeric_columns:
     excel_sheet[col] = pd.to_numeric(excel_sheet[col], errors='coerce')
 
 # 處理not null的值有Null就不可以放進去
-
 # check which not Null 
 not_null_columns = [column['name'] for column in table_columns if not column['nullable']]
 
@@ -80,7 +80,7 @@ excel_sheet = excel_sheet.dropna(subset=not_null_columns)
 if not invalid_rows.empty:
     print("Rows with NULL values in non-nullable columns:")
     print(invalid_rows)
-# check foreign key ...做到表四再補啦
+
 # 換行換空格或者拔掉?
 # function for newline replace by space
 def replace_newlines_and_spaces(cell_data):
@@ -97,23 +97,30 @@ excel_sheet = excel_sheet.applymap(replace_newlines_and_spaces)
 # a function for cut string
 def truncate_data(data, max_length):
     if isinstance(data, str) and len(data) > max_length:
+        print("this data too long:"+data)
         return data[:max_length]
     return data
 
 # a functionn for special charactor
 def remove_special_chars(cell_value):
+    cell_value = cell_value.replace("（", "(")#全形半形括號統一
+    cell_value = cell_value.replace("）", ")")
     special_chars_pattern = r'[!@#$%^&*_+=\\/:;,<>?"\'`~\[\]{}|]'
     return re.sub(special_chars_pattern, '', cell_value)
 
 # each cell max length 500
 for column in excel_sheet.columns:
     if excel_sheet[column].dtype == "object":
-        excel_sheet[column] = excel_sheet[column].apply(lambda x: remove_special_chars(str(x)))
         if(column!="Source_link"):
+            excel_sheet[column].fillna("", inplace=True)#替換所有nan to  ""
+            excel_sheet[column] = excel_sheet[column].apply(lambda x: remove_special_chars(str(x)))
             excel_sheet[column] = excel_sheet[column].apply(lambda x: truncate_data(x, 500))
             
 
 
+if excel_sheet.empty:
+    print("empty excel")
+    exit()  # 結束程式
 
 # write data to sql
 excel_sheet.to_sql(TABLE_NAME, engine, if_exists='append', index=False)

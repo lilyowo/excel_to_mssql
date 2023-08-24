@@ -4,7 +4,7 @@ CREATE TABLE SampleData(
 	Source_id int,
 	Sample_id int,
 	Standard_id int,
-	PRIMARY KEY(Med_id, Source_id, Sample_id),
+	PRIMARY KEY(Sample_id),
 	FOREIGN KEY(Med_id) REFERENCES AllMed (Med_id) ON DELETE CASCADE,
 	FOREIGN KEY(Source_id) REFERENCES MedSource(Source_id) ON DELETE CASCADE,
 	FOREIGN KEY(Standard_id) REFERENCES StandardData (Standard_id) ON DELETE CASCADE,
